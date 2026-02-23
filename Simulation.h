@@ -16,6 +16,8 @@ struct SimStats {
     double totalServiceTime = 0.0;
     int maxQueueLen = 0;
     double endTime = 0.0;
+    double idleTime = 0.0;
+    int customersWaited = 0;
 };
 
 bool ReadConfig(const std::string& filename, SimConfig& cfg);

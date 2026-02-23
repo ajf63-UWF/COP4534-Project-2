@@ -7,7 +7,6 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <valarray>
 #include <stdexcept>
 
 struct Customer {
@@ -15,7 +14,7 @@ struct Customer {
     double arrivalTime = 0.0;
 };
 
-static int acquierFreeServer(std::vector<bool>& busy) {
+static int acquireFreeServer(std::vector<bool>& busy) {
     for (int i = 0; i < (int)busy.size(); i++) {
         if (!busy[i]) {
             busy[i] = true;
@@ -60,6 +59,9 @@ SimStats RunSimulation(const SimConfig& cfg) {
 
     SimStats stats;
 
+    double lastEventTime = 0.0;
+    int numInSystem = 0; 
+
     int arrivalsGenerated = 0;
     int nextCustomerID = 0;
     double nextArrivalTime = 0.0;
@@ -100,11 +102,18 @@ SimStats RunSimulation(const SimConfig& cfg) {
         }
 
         Event ev = pq.pop();
+
+        double dt = ev.time - lastEventTime;
+        if (dt < 0) throw std::runtime_error("BUG: time went backwards");
+        if (numInSystem == 0) stats.idleTime += dt;
+        lastEventTime = ev.time;
         stats.endTime = ev.time;
 
         if (ev.type == EventType::ARRIVAL) {
             const int cid = ev.customerID;
             if (cid < 0 || cid >= cfg.N) throw std::runtime_error("ARRIVAL invalid customerID");
+
+            numInSystem++;
 
             arrivalTime[cid] = ev.time;
 
@@ -112,7 +121,7 @@ SimStats RunSimulation(const SimConfig& cfg) {
             c.id = cid;
             c.arrivalTime = ev.time;
 
-            int sid = acquierFreeServer(serverBusy);
+            int sid = acquireFreeServer(serverBusy);
             if (sid != -1) {
                 serviceStart[cid] = ev.time;
                 serviceDur[cid] = GetNextRandomInterval(cfg.mu);
@@ -122,10 +131,11 @@ SimStats RunSimulation(const SimConfig& cfg) {
                 dep.type = EventType::DEPARTURE;
                 dep.serverID = sid;
                 dep.customerID = cid;
-
                 pq.push(dep);
             } else {
                 waitQ.enqueue(c);
+                stats.customersWaited++;
+
                 if ((int)waitQ.size() > stats.maxQueueLen) {
                     stats.maxQueueLen = (int)waitQ.size();
                 }
@@ -140,19 +150,23 @@ SimStats RunSimulation(const SimConfig& cfg) {
                 throw std::runtime_error("Missing arrival/serviceStart for departed customer");
             }
 
+            numInSystem--;
+
             const double wait = serviceStart[cid] - arrivalTime[cid];
             stats.totalWaitTime += wait;
             stats.totalServiceTime += serviceDur[cid];
             stats.customersServed++;
 
+            // free server
             releaseServer(serverBusy, ev.serverID);
 
+            // if someone waiting, start immediately on the freed server
             if (!waitQ.empty()) {
                 Customer next = waitQ.dequeue();
                 if (next.id < 0 || next.id >= cfg.N) throw std::runtime_error("Dequeued invalid customer id");
 
-                const int sid = ev.serverID;     // reuse freed server
-                serverBusy[sid] = true;          // mark it busy again
+                const int sid = ev.serverID;
+                serverBusy[sid] = true;
 
                 serviceStart[next.id] = ev.time;
                 serviceDur[next.id] = GetNextRandomInterval(cfg.mu);
@@ -162,7 +176,6 @@ SimStats RunSimulation(const SimConfig& cfg) {
                 dep.type = EventType::DEPARTURE;
                 dep.serverID = sid;
                 dep.customerID = next.id;
-
                 pq.push(dep);
             }
         }

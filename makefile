@@ -2,7 +2,7 @@ GXX = g++
 CXXFLAGS = -std=c++17 -O2 -Wall -Wextra
 
 TARGET = sim
-OBJS = main.o Simulation.o RandomExp.o 
+OBJS = main.o Simulation.o RandomExp.o AnalyticalModel.o
 
 .PHONY: all clean
 
@@ -19,6 +19,9 @@ Simulation.o: Simulation.cpp Simulation.h Event.h MinHeap.h FIFOQueue.h RandomEx
 
 RandomExp.o: RandomExp.cpp RandomExp.h
 	$(GXX) $(CXXFLAGS) -c RandomExp.cpp
+
+AnalyticalModel.o: AnalyticalModel.cpp AnalyticalModel.h Simulation.h
+	$(GXX) $(CXXFLAGS) -c AnalyticalModel.cpp
 
 clean:
 	rm -f *.o $(TARGET)
