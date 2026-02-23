@@ -1,12 +1,15 @@
 GXX = g++
 CXXFLAGS = -std=c++17 -O2 -Wall -Wextra
 
-OBJS = main.o Simulation.o RandomExp.OBJS
+TARGET = sim
+OBJS = main.o Simulation.o RandomExp.o 
 
-all: Simulation
+.PHONY: all clean
 
-sim: $(OBJS)
-	$(GXX) $(CXXFLAGS) -o sim $(OBJS)
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(GXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
 
 main.o: main.cpp Simulation.h
 	$(GXX) $(CXXFLAGS) -c main.cpp
@@ -18,4 +21,4 @@ RandomExp.o: RandomExp.cpp RandomExp.h
 	$(GXX) $(CXXFLAGS) -c RandomExp.cpp
 
 clean:
-	rm -f *.o sim
+	rm -f *.o $(TARGET)

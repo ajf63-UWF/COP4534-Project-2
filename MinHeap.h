@@ -51,7 +51,6 @@ private:
 
     void siftDown(size_t index) {
         size_t i = index;
-        size_t n = data.size();
         while (true) {
             size_t l = 2 * i + 1;
             size_t r = 2 * i + 2;
