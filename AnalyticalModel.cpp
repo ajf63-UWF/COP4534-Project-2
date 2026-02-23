@@ -23,18 +23,18 @@ AnalyticalStats ComputeAnalyticalModel(const SimConfig& cfg) {
     // Compute P0
     long double sum = 0.0L;
     for (int i = 0; i <= M - 1; i++) {
-        sum += std::powl(x, (long double)i) / factorial_int(i);
+        sum += std::pow(x, (long double)i) / factorial_int(i);
     }
 
     long double tail = 
-        (std::powl(x, (long double)M) / factorial_int(M)) * 
+        (std::pow(x, (long double)M) / factorial_int(M)) * 
         (((long double)M * mu) / (((long double)M * mu) - lambda));
 
     a.P0 = 1.0L / (sum + tail);
 
     // L
-    a.L = (lambda * mu * std::powl(x, (long double)M) /
-        (factorial_int(M - 1) * std::powl(((long double)M * mu - lambda), 2.0L))) * a.P0
+    a.L = (lambda * mu * std::pow(x, (long double)M) /
+        (factorial_int(M - 1) * std::pow(((long double)M * mu - lambda), 2.0L))) * a.P0
         + (lambda / mu);
 
     // W
