@@ -1,5 +1,5 @@
 GXX = g++
-CXXFLAGS = -std=c++17 -02 -Wall -Wextra
+CXXFLAGS = -std=c++17 -O2 -Wall -Wextra
 
 OBJS = main.o Simulation.o RandomExp.OBJS
 
